@@ -1,0 +1,13 @@
+---
+all:
+  children:
+    agents:
+      hosts:
+        my-agent-1.example.com:
+      vars:
+        ansible_user: developer
+        ansible_ssh_private_key_file: "{{ lookup('env','HOME') }}/.ssh/server_key.pem"
+        ci_user: ci-user
+        ci_user_keys:
+          - ssh-rsa ....
+          - ssh-rsa ....

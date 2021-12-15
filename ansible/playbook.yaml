@@ -1,0 +1,54 @@
+---
+- name: Prepare TC Agent
+  hosts: all
+  become: yes
+
+  vars:
+    req_packages:
+      - apt-transport-https
+      - bash
+      - build-essential
+      - ca-certificates
+      - curl
+      - gnupg
+      - libcurl4-openssl-dev
+      - openjdk-8-jdk
+      - openjdk-11-jdk
+      - software-properties-common
+      - unzip
+      - wget
+    # ci_user: ''
+    # ci_user_keys: []
+
+  tasks:
+    - name: Install prerequisite packages
+      apt:
+        name: "{{ req_packages }}"
+        state: present
+        update_cache: yes
+
+    - name: Add Microsoft APT signing key
+      apt_key:
+        url: https://packages.microsoft.com/keys/microsoft.asc
+        state: present
+
+    - name: Add Microsoft APT repository
+      apt_repository:
+        repo: "deb https://packages.microsoft.com/ubuntu/{{ ansible_distribution_version }}/prod {{ ansible_distribution_release }} main"
+        state: present
+        update_cache: yes
+
+    - name: Install Azure DCAP client
+      apt:
+        name: az-dcap-client
+        state: present
+
+    - name: Configure CI user keys, if specified
+      authorized_key:
+        user: "{{ ci_user }}"
+        state: present
+        key: "{{ item }}"
+      loop: "{{ ci_user_keys }}"
+      when:
+        - ci_user is defined and ci_user|length > 0
+        - ci_user_keys is defined and ci_user_keys|length > 0
