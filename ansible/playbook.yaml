@@ -38,9 +38,9 @@
         state: present
         update_cache: yes
 
-    - name: Install Azure DCAP client
+    - name: Install Azure client
       apt:
-        name: az-dcap-client
+        name: azure-cli
         state: present
 
     - name: Configure CI user keys, if specified
