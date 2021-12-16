@@ -3,27 +3,22 @@
   hosts: all
   become: yes
 
-  vars:
-    req_packages:
-      - apt-transport-https
-      - bash
-      - build-essential
-      - ca-certificates
-      - curl
-      - gnupg
-      - libcurl4-openssl-dev
-      - openjdk-8-jdk
-      - openjdk-11-jdk
-      - software-properties-common
-      - unzip
-      - wget
-    # ci_user: ''
-    # ci_user_keys: []
-
   tasks:
     - name: Install prerequisite packages
       apt:
-        name: "{{ req_packages }}"
+        name:
+          - apt-transport-https
+          - bash
+          - build-essential
+          - ca-certificates
+          - curl
+          - gnupg
+          - libcurl4-openssl-dev
+          - openjdk-8-jdk
+          - openjdk-11-jdk
+          - software-properties-common
+          - unzip
+          - wget
         state: present
         update_cache: yes
 
