@@ -3,6 +3,9 @@
   hosts: all
   become: yes
 
+  vars:
+    data_mount: /data
+
   tasks:
     - name: Install prerequisite packages
       apt:
@@ -47,3 +50,68 @@
       when:
         - ci_user is defined and ci_user|length > 0
         - ci_user_keys is defined and ci_user_keys|length > 0
+
+    - name: Search for data device amount mounts and block devices
+      set_fact:
+        data_mount_dev: "{{ ansible_mounts | json_query(jmesq_mount) | first | default('') }}"
+        data_disk_dev: "/dev/{{ ansible_devices | dict2items | json_query(jmesq_device) | first | default('') }}"
+      vars:
+        jmesq_mount: "[?mount == `{{ data_mount }}`].device"
+        jmesq_device: '[?(value.model == `Virtual Disk` && length(value.partitions) == `0`)].key'
+
+    - name: Determine data disk path
+      set_fact:
+        data_disk: "{{ data_mount_dev[:-1] if not data_mount_dev|length == 0 else data_disk_dev }}"
+
+    - name: Create and mount data disk
+      when:
+        - data_disk is defined and data_disk|length > 5
+        - data_mount is defined and data_mount|length > 0
+      block:
+        - name: Ensure partition is unmounted, if exists
+          mount:
+            path: "{{ data_mount }}"
+            state: unmounted
+          when: data_mount_dev is defined and data_mount_dev|length > 0
+
+        - name: Manage partition on disk
+          parted:
+            device: "{{ data_disk }}"
+            number: 1
+            label: gpt
+            part_end: "100%"
+            resize: yes
+            fs_type: xfs
+            state: present
+          register: parted_disk
+
+        - name: Reload facts
+          setup:
+          when: parted_disk.changed
+
+        - name: Determine partition UUID
+          set_fact:
+            data_part_uuid: "{{ (ansible_devices[data_disk_name].partitions | dict2items)[0].value.uuid }}"
+          vars:
+            data_disk_name: "{{ data_disk.split('/')[2] }}"
+
+        - name: Create or grow filesystem
+          filesystem:
+            dev: "{{ data_disk }}1"
+            fstype: xfs
+            resizefs: "{{ not parted_disk.changed }}"
+
+        - name: Mount device
+          mount:
+            path: "{{ data_mount }}"
+            src: "UUID={{ data_part_uuid }}"
+            fstype: xfs
+            opts: defaults,nofail
+            state: mounted
+
+        - name: Change mount point ownership/permissions
+          file:
+            path: "{{ data_mount }}"
+            owner: "{{ ci_user | default(ansible_user) }}"
+            mode: 0775
+            state: directory
