@@ -27,6 +27,11 @@ variable "location" {
   description = "The Azure Region in which all resources should be created."
 }
 
+variable "vm_user" {
+  description = "The user to be created on any defined the virtual machines"
+  default = "adminuser"
+}
+
 variable "vm_defs" {
   type        = list(object({
     name              = string

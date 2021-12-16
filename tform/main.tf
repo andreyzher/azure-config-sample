@@ -64,7 +64,7 @@ resource "azurerm_public_ip" "pip" {
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
   allocation_method   = "Static"
-  domain_name_label   = "${var.prefix}-${each.key}-vm"
+  domain_name_label   = "${var.prefix}-${each.key}"
 }
 
 resource "azurerm_network_interface" "main" {
@@ -107,13 +107,14 @@ resource "azurerm_linux_virtual_machine" "main" {
   for_each = {for vm in var.vm_defs: vm.name => vm}
 
   name                            = "${var.prefix}-${each.key}-vm"
+  computer_name                   = "${var.prefix}-${each.key}"
   resource_group_name             = azurerm_resource_group.main.name
   location                        = azurerm_resource_group.main.location
   size                            = each.value.size
-  admin_username                  = "adminuser"
+  admin_username                  = var.vm_user
   disable_password_authentication = true
   admin_ssh_key {
-    username = "adminuser"
+    username = var.vm_user
     public_key = file("~/.ssh/id_rsa.pub")
   }
 
