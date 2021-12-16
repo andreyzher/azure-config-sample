@@ -40,7 +40,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Sysdig CIS Dockerfile Benchmark
-        uses: sysdiglabs/benchmark-dockerfile@v1
+        uses: sysdiglabs/benchmark-dockerfile@v1.0.0
 
       - name: Build and push Docker image
         id: build-and-push
