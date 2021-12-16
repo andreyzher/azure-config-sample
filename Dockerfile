@@ -35,7 +35,7 @@ RUN sudo mkdir -pv -m 775 /work && \
     sudo chown -Rv ${user}:0 /work && \
     python3 -m venv $HOME/venv && \
     python3 -m pip install --no-cache -U pip wheel && \
-    pip install --no-cache -U ansible-core && \
+    pip install --no-cache -U ansible-core jmespath && \
     ansible-galaxy collection install --no-cache -U ansible.posix community.general
 
 WORKDIR /work
