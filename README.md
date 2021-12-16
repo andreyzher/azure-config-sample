@@ -1,6 +1,14 @@
-# azure-config-sample
+# Azure Configuration Sample
 
-## Build Workstation Image
+Reference code for creating Azure Virtual Machines and configuring them using Ansible.
+
+Prerequisites need to be either installed on the workstation, or accessed via Docker container:
+
+```
+docker run --rm -ti ghcr.io/andreyzher/azure-config-sample:main bash -il
+```
+
+## Build local Workstation Image
 
 ```
 docker build --progress=plain -t azure-config-sample:latest .
@@ -34,4 +42,31 @@ ansible-playbook -c local -i localhost, playbook.yaml
     ```
     cd ansible
     ansible-playbook -i inventory.yaml playbook.yaml
+    ```
+
+## Running Terraform
+
+The sample Terraform code will reuse the Azure CLI credentials of the workstation, instead of handling it's own authentication.
+
+1. To login on the workstation, run the command below and follow the prompts:
+
+    ```
+    az login
+    ```
+
+2. If this is the first time executing Terraform, run `terraform init` from the `tform` directory.
+
+    > NOTE: The `terraform.tfstate` file must be persisted somewhere to share the state.
+    > See [Terraform Documentation](https://www.terraform.io/language/settings/backends) for more information about the available backends.
+
+3. Run the planning phase using:
+
+    ```
+    terraform plan -out=work
+    ```
+
+4. Inspect the output, and apply of the changes are as expected:
+
+    ```
+    terraform apply work
     ```
